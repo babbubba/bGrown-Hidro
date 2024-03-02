@@ -16,7 +16,7 @@ private:
 
 public:
     PhSensor();
-    PhSensor(int);
+    PhSensor(int analogReadPin);
     void Init();
     float GetPH();
 };

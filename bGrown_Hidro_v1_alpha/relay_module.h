@@ -14,12 +14,12 @@ private:
 
 public:
   RelayModule();
-  RelayModule(RelayChannel[]);
-  bool AddRelay(RelayChannel);
+  RelayModule(RelayChannel channels[]);
+  bool AddRelay(RelayChannel channel);
   RelayChannel* GetRelay(int);
   bool GetRelayStatus(int);
   bool SetRelayStatus(int, bool);
-  bool InitRelays();
+  bool Init();
 };
 
 #endif

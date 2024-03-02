@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Arduino.h"
-RelayChannel::RelayChannel() 
-{  
+RelayChannel::RelayChannel()
+{
 }
 RelayChannel::RelayChannel(int channel, int pin) : RelayChannel(channel, pin, false)
 {
@@ -21,12 +21,17 @@ RelayChannel::RelayChannel(int channel, int pin, bool reverse)
 void RelayChannel::Init()
 {
   pinMode(_pin, OUTPUT);
-  digitalWrite(_pin, _reverse ? HIGH : LOW);
+  if (_reverse)
+  {
+    digitalWrite(_pin, HIGH);
+  }
+  // digitalWrite(_pin, _reverse ? HIGH : LOW);
   Serial.print("GPIO ");
   Serial.print(_pin);
-  Serial.print(" Init as relay (");
-  Serial.print(_reverse ? "inverse" : "normal");
-  Serial.print(") channel: ");
+  Serial.print(" channel ");
+  // Serial.print(" Init as relay (");
+  // Serial.print(_reverse ? "inverse" : "normal");
+  // Serial.print(") channel: ");
   Serial.println(_channel);
 }
 
@@ -42,17 +47,19 @@ void RelayChannel::PrintChangeStatus(bool demand)
 
 void RelayChannel::TurnOn()
 {
+  if(_active) return;
   digitalWrite(_pin, (_reverse) ? LOW : HIGH);
   PrintChangeStatus(true);
-  _active = 1;
+  _active = true;
 }
 void RelayChannel::TurnOff()
 {
+  if(!_active) return;
   digitalWrite(_pin, (_reverse) ? HIGH : LOW);
   PrintChangeStatus(false);
-  _active = 0;
+  _active = false;
 }
 void RelayChannel::Toggle()
 {
-  _active == 0 ? TurnOn() : TurnOff();
+  _active == false ? TurnOn() : TurnOff();
 }

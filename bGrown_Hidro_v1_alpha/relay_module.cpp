@@ -3,19 +3,25 @@
 #include <Arduino.h>
 RelayModule::RelayModule()
 {
-    _lastIndex = 0;
 }
 RelayModule::RelayModule(RelayChannel channels[])
 {
-    _lastIndex = 0;
-  for(int i=0;i<sizeof(channels);i++) {
-    AddRelay(channels[i]);
-    } 
-  
+    Serial.println("RelayModule ctor ");
+
+    int channelsLenght = sizeof(channels) / sizeof(channels[0]);
+    Serial.print("Addding ");
+    Serial.print(channelsLenght);
+    Serial.println(" channels...");
+    for (int i = 0; i < channelsLenght; i++)
+    {
+        AddRelay(channels[i]);
+    }
 }
 
 bool RelayModule::AddRelay(RelayChannel channel)
 {
+    Serial.println("AddRelay ");
+
     if (_lastIndex >= _relaysSize)
         return false;
 
@@ -24,9 +30,12 @@ bool RelayModule::AddRelay(RelayChannel channel)
     return true;
 }
 
-RelayChannel* RelayModule::GetRelay(int channel)
+RelayChannel *RelayModule::GetRelay(int channel)
 {
-    if (!_initialized) return NULL;
+    Serial.println("Get Relay ");
+    
+    if (!_initialized)
+        return NULL;
 
     for (int i = 0; i < _lastIndex; i++)
     {
@@ -39,6 +48,8 @@ RelayChannel* RelayModule::GetRelay(int channel)
 
 bool RelayModule::GetRelayStatus(int channel)
 {
+    Serial.print("GetStatusChannel");
+    Serial.println(channel);
     return GetRelay(channel)->Status();
 }
 
@@ -48,19 +59,26 @@ bool RelayModule::SetRelayStatus(int channel, bool newStatus)
         return false;
 
     RelayChannel *ch = GetRelay(channel);
-    if(ch=NULL) return false;
+    if (ch = NULL)
+        return false;
     newStatus ? ch->TurnOn() : ch->TurnOff();
     return true;
 }
 
-bool RelayModule::InitRelays()
+bool RelayModule::Init()
 {
     if (_initialized)
+    {
+        Serial.print("Relays already initialized!!!");
         return false;
-    Serial.print("Initializing relays... ");
+    }
+    Serial.print("Initializing relays[");
+    Serial.print(_lastIndex);
+    Serial.println("] ...");
     for (int i = 0; i < _lastIndex; i++)
     {
-        _relays[i]->Init();
+        if(*_relays != NULL) 
+            _relays[i]->Init();
     }
     _initialized = true;
     return true;

@@ -8,11 +8,13 @@ PhSensor::PhSensor()
 }
 PhSensor::PhSensor(int analogReadPin)
 {
+  Serial.println("Setting PH analog read gpio");
   _analogReadPin = analogReadPin;
 }
 
 void PhSensor::Init()
 {
+  Serial.println("Initializing PH analog read gpio");
   pinMode(_analogReadPin, INPUT);
 }
 float PhSensor::GetPH()
@@ -38,7 +40,10 @@ float PhSensor::GetPH()
 
   // convertto il valore rilevato in volt considerando che 4095 è 3.3V e 0 è 0V dividendo per i campioni scelti (6)
   float volt = (float)valuesSum * 3.3 / 4095.0 / nElementi;
-  return getPhInterpolated(volt);
+  float ph = getPhInterpolated(volt);
+  Serial.print("PH: ");
+  Serial.println(ph);
+  return ph;
 }
 
 float PhSensor::interpolate(float voltTointerpolate, float releavedVolt, float voltLimit, float releavedPH, float beginPH)
