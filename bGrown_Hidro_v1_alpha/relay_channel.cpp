@@ -12,7 +12,6 @@ RelayChannel::RelayChannel(int channel, int pin) : RelayChannel(channel, pin, fa
 RelayChannel::RelayChannel(int channel, int pin, bool reverse)
 {
   _active = false;
-  //itoa(channel, _label, 10);
   snprintf(_label, sizeof(_label), "%d", channel);
   _reverse = reverse;
   _channel = channel;
@@ -22,10 +21,13 @@ RelayChannel::RelayChannel(int channel, int pin, bool reverse)
 void RelayChannel::Init()
 {
   pinMode(_pin, OUTPUT);
-  if (_reverse)
-  {
-    digitalWrite(_pin, HIGH);
-  }
+  digitalWrite(_pin, _reverse ? HIGH : LOW);
+  Serial.print("GPIO ");
+  Serial.print(_pin);
+  Serial.print(" Init as relay (");
+  Serial.print(_reverse ? "inverse" : "normal");
+  Serial.print(") channel: ");
+  Serial.println(_channel);
 }
 
 bool RelayChannel::Status()

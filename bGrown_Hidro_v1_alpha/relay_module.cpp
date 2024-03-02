@@ -57,6 +57,7 @@ bool RelayModule::InitRelays()
 {
     if (_initialized)
         return false;
+    Serial.print("Initializing relays... ");
     for (int i = 0; i < _lastIndex; i++)
     {
         _relays[i]->Init();
