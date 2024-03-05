@@ -1,8 +1,12 @@
 #include "relay_module.h"
 #include "ph_sensor.h"
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
 
 // 4 Relay 10A Module (used for 12V peristaltic pumps)
-#define Relay_01_c01_Pin 23 // [ch_PhPlus]    Define the Relay Module 1 Channel 1 pin (10A) 
+#define Relay_01_c01_Pin 23 // [ch_PhPlus]    Define the Relay Module 1 Channel 1 pin (10A)
 #define Relay_01_c02_Pin 21 // [ch_PhPMinus]  Define the Relay Module 1 Channel 2 pin (10A)
 #define Relay_01_c03_Pin 19 //                Define the Relay Module 1 Channel 3 pin (10A)
 #define Relay_01_c04_Pin 18 //                Define the Relay Module 1 Channel 4 pin (10A)
@@ -17,13 +21,20 @@
 // PH Sensor Analog Data In
 #define PhSensor_analog_data_pin 34
 
-
-
-//RelayModule RelaysIntance; //= RelayModule(channels);
+// RelayModule RelaysIntance; //= RelayModule(channels);
 RelayChannel ch_PhPlus = RelayChannel(1, Relay_01_c01_Pin, true);
 RelayChannel ch_PhMinus = RelayChannel(2, Relay_01_c02_Pin, true);
 
 PhSensor PhSensorInstance = PhSensor(PhSensor_analog_data_pin);
+
+AsyncWebServer server(80);
+const char *ssid = "bHome.Wifi";
+const char *password = "0EvItyr6mSIFP1FpIDMuwWqb";
+void notFound(AsyncWebServerRequest *request)
+{
+  request->send(404, "application/json", "{\"message\":\"Not found\"}");
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -38,36 +49,106 @@ void setup()
   ch_PhMinus.Init();
   PhSensorInstance = PhSensor(PhSensor_analog_data_pin);
   PhSensorInstance.Init();
+
+  // Set WIFI
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    Serial.printf("WiFi Failed!\n");
+  }
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { 
+    response->addHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+    request->send(200, "application/json", "{\"message\":\"Welcome\"}"); });
+  server.on("/ph", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    float currentPh = PhSensorInstance.GetPH();
+    StaticJsonDocument<100> data;
+    data["ph"] = currentPh;
+    String response;
+    serializeJson(data, response);
+    response->addHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+    request->send(200, "application/json", response); });
+  server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    StaticJsonDocument<100> data;
+    float currentPh = PhSensorInstance.GetPH();
+    data["ph"] = currentPh;
+    JsonArray channels = data.createNestedArray("channels");
+    JsonObject nested = channels.createNestedObject();
+    nested["active"] = ch_PhMinus.Status();
+    nested["label"] = "ch_PhMinus";
+    nested["gpio"] = Relay_01_c02_Pin;
+    nested["channel"] = ch_PhMinus._channel;
+    JsonObject nested2 = channels.createNestedObject();
+    nested2["active"] = ch_PhPlus.Status();
+    nested2["label"] = "ch_PhPlus";
+    nested2["gpio"] = Relay_01_c01_Pin;
+    nested2["channel"] = ch_PhPlus._channel;
+
+    String response;
+    serializeJson(data, response);
+    response->addHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+    request->send(200, "application/json", response); });
+  server.on("/get-message", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    StaticJsonDocument<100> data;
+    if (request->hasParam("message"))
+    {
+      data["message"] = request->getParam("message")->value();
+    }
+    else
+    {
+      data["message"] = "No message parameter";
+    }
+    String response;
+    serializeJson(data, response);
+    request->send(200, "application/json", response); });
+  AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/post-message", [](AsyncWebServerRequest *request, JsonVariant &json)
+                                                                         {
+    StaticJsonDocument<200> data;
+    if (json.is<JsonArray>())
+    {
+      data = json.as<JsonArray>();
+    }
+    else if (json.is<JsonObject>())
+    {
+      data = json.as<JsonObject>();
+    }
+    String response;
+    serializeJson(data, response);
+    request->send(200, "application/json", response);
+    Serial.println(response); });
+  server.addHandler(handler);
+  server.onNotFound(notFound);
+  server.begin();
 }
 
 void loop()
 {
 
   float ph = PhSensorInstance.GetPH();
-  if(ph > 6.4) {
+  if (ph > 6.4)
+  {
     ch_PhMinus.TurnOn();
-  } else {
+  }
+  else
+  {
     ch_PhMinus.TurnOff();
   }
 
- if(ph < 5.0) {
+  if (ph < 5.0)
+  {
     ch_PhPlus.TurnOn();
-  } else {
+  }
+  else
+  {
     ch_PhPlus.TurnOff();
   }
 
-
   delay(2000);
-  // RelaysIntance.SetRelayStatus(1,true);
-  // delay(2000);
-  // RelaysIntance.SetRelayStatus(2,true);
-  // delay(1000);
-  // RelaysIntance.SetRelayStatus(5,true);
-  // delay(10000);
-  // RelaysIntance.SetRelayStatus(1,false);
-  // delay(2000);
-  // RelaysIntance.SetRelayStatus(2,false);
-  // delay(1000);
-  // RelaysIntance.SetRelayStatus(5,false);
-  // delay(10000);
 }
