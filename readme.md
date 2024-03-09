@@ -10,7 +10,7 @@
 
 Il modulo alimentato non assorbe praticamente nulla. La bobina eccitata assorbe circa 190 mA.
 
-La bobina si attua con +5V sul canale (da testare se va bene anche +3.3V).
+La bobina si attua con >= 2.6V.
 
 Ho scelto questi perché reggono carichi da 30A a 220V quindi sufficienti per i carichi induttivi di ventole di riscaldamento o resistenze medio potenti.
 
@@ -28,6 +28,6 @@ N.B. Le bobine del modulo relays in questione si attuano quando il canale va a 0
 | -------------------------------- | ---- | -------------------- | --------------------- | ----- |
 | Relay: SLA-05VDC-SL-C            | 3    | 190                  | 570mA/2.85W           | 5V    |
 | Relay: SRD-05VDC-SL-C            | 4    | 75                   | 300mA/1.5W            | 5V    |
-| Pompa Peristaltica: NKP-DCL-510Y | 2    | 630                  | 1260mA/15.1W          | 12V   |
+| Pompa Peristaltica: NKP-DCL-510Y | 4    | 630                  | 2520mA/30.2W          | 12V   |
 |                                  |      |                      |                       |       |
 

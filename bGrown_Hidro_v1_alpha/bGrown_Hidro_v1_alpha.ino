@@ -1,6 +1,7 @@
 // #include "relay_module.h"
 #include "relay_channel.h"
 #include "ph_sensor.h"
+#include "tds_sensor.h"
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include "AsyncJson.h"
@@ -22,6 +23,7 @@
 
 // PH Sensor Analog Data In
 #define PhSensor_analog_data_pin 34
+#define TDSSensor_analog_data_pin 35
 //const static int PhSensor_analog_data_pin = 34;
 
 // RelayModule RelaysIntance; //= RelayModule(channels);
@@ -29,6 +31,8 @@ RelayChannel ch_PhMinus = RelayChannel(1, Relay_01_c01_Pin, true);
 RelayChannel ch_PhPlus = RelayChannel(2, Relay_01_c02_Pin, true);
 
 PhSensor PhSensorInstance = PhSensor(PhSensor_analog_data_pin);
+
+TDSSensor TDSSensorInstance = TDSSensor();
 
 AsyncWebServer server(80);
 const char *ssid = "bHome.Wifi";
@@ -51,8 +55,9 @@ void setup()
   // RelaysIntance = RelayModule(channels);
   ch_PhPlus.Init();
   ch_PhMinus.Init();
-  PhSensorInstance = PhSensor(PhSensor_analog_data_pin);
+  // PhSensorInstance = PhSensor(PhSensor_analog_data_pin);
   PhSensorInstance.Init();
+  TDSSensorInstance.Init(TDSSensor_analog_data_pin);
 
   // Set WIFI
   WiFi.mode(WIFI_STA);
