@@ -3,19 +3,19 @@
 #include <stdlib.h>
 #include "Arduino.h"
 
-PhSensor::PhSensor()
-{
-}
 PhSensor::PhSensor(int analogReadPin)
 {
   Serial.println("Setting PH analog read gpio");
   _analogReadPin = analogReadPin;
+  // CircularBuffer<float, 16> _phBuffer = CircularBuffer<float, 16>();
 }
 
 void PhSensor::Init()
 {
   Serial.println("Initializing PH analog read gpio");
   pinMode(_analogReadPin, INPUT);
+
+  // TODO: Inizializza un timer per la memorizzazione di una lettura ogni tot secondi in modo da ottenere la media
 }
 float PhSensor::GetPH()
 {
@@ -39,10 +39,13 @@ float PhSensor::GetPH()
   }
 
   // convertto il valore rilevato in volt considerando che 4095 è 3.3V e 0 è 0V dividendo per i campioni scelti (6)
+  // TODO: Cambiare usando il convertitore anag./dig. ADS 1115 a 16 bit cosi da avere una lettura lineare e piu precisa...
   float volt = (float)valuesSum * 3.3 / 4095.0 / nElementi;
   float ph = getPhInterpolated(volt);
   Serial.print("PH: ");
-  Serial.println(ph);
+  Serial.print(ph);
+  Serial.println(" releaved.");
+  addPHToBuffer(ph);
   return ph;
 }
 
@@ -111,5 +114,32 @@ void PhSensor::middleElements(int arr[], int length, int n, int result[])
   for (int i = 0; i < n; i++)
   {
     result[i] = arr[indiceIniziale + i];
+  }
+}
+
+float PhSensor::GetPHAverage()
+{
+  float phValues = 0;
+  for (int idx = 0; idx < _phAverageBufferCursor; idx++)
+  {
+    phValues += _phAverageBuffer[idx];
+  }
+  return phValues / _phAverageBufferCursor;
+}
+
+void PhSensor::addPHToBuffer(float ph)
+{
+  if (_phAverageBufferCursor < _phAverageBufferCount)
+  {
+    _phAverageBuffer[_phAverageBufferCursor] = ph;
+    _phAverageBufferCursor++;
+  }
+  else
+  {
+    for (int idx = 0; idx < _phAverageBufferCount - 1; idx++)
+    {
+      _phAverageBuffer[idx] = _phAverageBuffer[idx + 1];
+    }
+    _phAverageBuffer[_phAverageBufferCount - 1] = ph;
   }
 }
